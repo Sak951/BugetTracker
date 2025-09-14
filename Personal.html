@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget Tracker - ₹</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #fca311;
+            --info: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 1.5rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .sidebar {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .dashboard {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        h1, h2, h3, h4 {
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .summary-card h3 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .summary-card .amount {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--light-gray);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #c1121f;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-success:hover {
+            background-color: #2a9d8f;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        th {
+            background-color: var(--light);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: var(--light);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .tab-container {
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            list-style: none;
+            border-bottom: 1px solid var(--light-gray);
+            margin-bottom: 20px;
+        }
+
+        .tabs li {
+            margin-right: 10px;
+        }
+
+        .tabs a {
+            display: block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: var(--dark);
+            border-bottom: 3px solid transparent;
+        }
+
+        .tabs a.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .alert-danger {
+            background-color: #ffccd5;
+            color: #c1121f;
+        }
+
+        .alert-success {
+            background-color: #ccfbf1;
+            color: #0d9488;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.4em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+
+        .badge-success {
+            color: #fff;
+            background-color: var(--success);
+        }
+
+        .badge-danger {
+            color: #fff;
+            background-color: var(--danger);
+        }
+
+        .progress {
+            height: 10px;
+            background-color: var(--light-gray);
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+            background-color: var(--primary);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar select, .filter-bar input {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .currency-badge {
+            background-color: #FF9933;
+            color: #000080;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">BudgetTracker <span class="currency-badge">₹</span></div>
+                <ul class="nav-links">
+                    <li><a href="#" class="active" data-tab="dashboard">Dashboard</a></li>
+                    <li><a href="#" data-tab="transactions">Transactions</a></li>
+                    <li><a href="#" data-tab="budgets">Budgets</a></li>
+                    <li><a href="#" data-tab="groups">Groups</a></li>
+                    <li><a href="#" data-tab="reports">Reports</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="card">
+                    <h3>Quick Summary</h3>
+                    <div id="quick-summary">
+                        <p>Total Income: <span id="total-income">₹0.00</span></p>
+                        <p>Total Expenses: <span id="total-expenses">₹0.00</span></p>
+                        <p>Net Balance: <span id="net-balance">₹0.00</span></p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Add Transaction</h3>
+                    <form id="transaction-form">
+                        <div class="form-group">
+                            <label for="type">Type</label>
+                            <select id="type" required>
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="amount">Amount (₹)</label>
+                            <input type="number" id="amount" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" required>
+                                <option value="">Select a category</option>
+                                <option value="salary">Salary</option>
+                                <option value="freelance">Freelance</option>
+                                <option value="investment">Investment</option>
+                                <option value="food">Food</option>
+                                <option value="transport">Transport</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="utilities">Utilities</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="healthcare">Healthcare</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">Notes (Optional)</label>
+                            <textarea id="notes" rows="2"></textarea>
+                        </div>
+                        <button type="submit">Add Transaction</button>
+                    </form>
+                </div>
+            </aside>
+
+            <main class="dashboard">
+                <div class="tab-container">
+                    <ul class="tabs">
+                        <li><a href="#" class="tab-link active" data-tab="dashboard">Dashboard</a></li>
+                        <li><a href="#" class="tab-link" data-tab="transactions">Transactions</a></li>
+                        <li><a href="#" class="tab-link" data-tab="budgets">Budgets</a></li>
+                        <li><a href="#" class="tab-link" data-tab="groups">Groups</a></li>
+                        <li><a href="#" class="tab-link" data-tab="reports">Reports</a></li>
+                    </ul>
+
+                    <!-- Dashboard Tab -->
+                    <div id="dashboard-tab" class="tab-content active">
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <h3>Total Income</h3>
+                                <div class="amount" id="dashboard-income">₹0.00</div>
+                            </div>
+                            <div class="summary-card">
+                                <h3>Total Expenses</h3>
+                                <div class="amount" id="dashboard-expenses">₹0.00</div>
+                            </div>
+                            <div class="summary-card">
+                                <h3>Net Balance</h3>
+                                <div class="amount" id="dashboard-balance">₹0.00</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>Income vs Expenses</h3>
+                            <div class="chart-container">
+                                <canvas id="incomeExpenseChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>Category-wise Spending</h3>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>Budget Progress</h3>
+                            <div id="budget-progress">
+                                <!-- Budget progress bars will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Tab -->
+                    <div id="transactions-tab" class="tab-content">
+                        <div class="card">
+                            <h3>Transaction History</h3>
+                            <div class="filter-bar">
+                                <select id="filter-type">
+                                    <option value="">All Types</option>
+                                    <option value="income">Income</option>
+                                    <option value="expense">Expense</option>
+                                </select>
+                                <select id="filter-category">
+                                    <option value="">All Categories</option>
+                                    <option value="salary">Salary</option>
+                                    <option value="freelance">Freelance</option>
+                                    <option value="investment">Investment</option>
+                                    <option value="food">Food</option>
+                                    <option value="transport">Transport</option>
+                                    <option value="entertainment">Entertainment</option>
+                                    <option value="utilities">Utilities</option>
+                                    <option value="shopping">Shopping</option>
+                                    <option value="healthcare">Healthcare</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <input type="date" id="filter-start-date">
+                                <input type="date" id="filter-end-date">
+                                <button id="apply-filters">Apply Filters</button>
+                            </div>
+                            <table id="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Category</th>
+                                        <th>Amount (₹)</th>
+                                        <th>Notes</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Transactions will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Budgets Tab -->
+                    <div id="budgets-tab" class="tab-content">
+                        <div class="card">
+                            <h3>Set Monthly Budgets</h3>
+                            <form id="budget-form">
+                                <div class="form-group">
+                                    <label for="budget-category">Category</label>
+                                    <select id="budget-category" required>
+                                        <option value="">Select a category</option>
+                                        <option value="food">Food</option>
+                                        <option value="transport">Transport</option>
+                                        <option value="entertainment">Entertainment</option>
+                                        <option value="utilities">Utilities</option>
+                                        <option value="shopping">Shopping</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="budget-amount">Budget Amount (₹)</label>
+                                    <input type="number" id="budget-amount" step="0.01" min="0" required>
+                                </div>
+                                <button type="submit">Set Budget</button>
+                            </form>
+                        </div>
+
+                        <div class="card">
+                            <h3>Current Budgets</h3>
+                            <table id="budgets-table">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Budget Amount (₹)</th>
+                                        <th>Spent (₹)</th>
+                                        <th>Remaining (₹)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Budgets will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Groups Tab -->
+                    <div id="groups-tab" class="tab-content">
+                        <div class="card">
+                            <h3>Create Group</h3>
+                            <form id="group-form">
+                                <div class="form-group">
+                                    <label for="group-name">Group Name</label>
+                                    <input type="text" id="group-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="group-members">Members (comma separated)</label>
+                                    <input type="text" id="group-members" placeholder="John, Jane, Bob" required>
+                                </div>
+                                <button type="submit">Create Group</button>
+                            </form>
+                        </div>
+
+                        <div class="card">
+                            <h3>Your Groups</h3>
+                            <div id="groups-list">
+                                <!-- Groups will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reports Tab -->
+                    <div id="reports-tab" class="tab-content">
+                        <div class="card">
+                            <h3>Financial Reports</h3>
+                            <div class="filter-bar">
+                                <select id="report-type">
+                                    <option value="monthly">Monthly Summary</option>
+                                    <option value="category">Category Breakdown</option>
+                                    <option value="trend">Spending Trends</option>
+                                </select>
+                                <select id="report-month">
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <select id="report-year">
+                                    <!-- Years will be populated dynamically -->
+                                </select>
+                                <button id="generate-report">Generate Report</button>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="report-chart"></canvas>
+                            </div>
+                            <div id="report-summary">
+                                <!-- Report summary will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let budgets = JSON.parse(localStorage.getItem('budgets')) || [];
+        let groups = JSON.parse(localStorage.getItem('groups')) || [];
+
+        // Format currency in Indian Rupees
+        function formatCurrency(amount) {
+            return '₹' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        // DOM Elements
+        const transactionForm = document.getElementById('transaction-form');
+        const transactionsTable = document.getElementById('transactions-table');
+        const budgetForm = document.getElementById('budget-form');
+        const budgetsTable = document.getElementById('budgets-table');
+        const groupForm = document.getElementById('group-form');
+        const groupsList = document.getElementById('groups-list');
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const navLinks = document.querySelectorAll('.nav-links a');
+
+        // Charts
+        let incomeExpenseChart = null;
+        let categoryChart = null;
+        let reportChart = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date as default for transaction date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            
+            // Load data
+            updateDashboard();
+            renderTransactions();
+            renderBudgets();
+            renderGroups();
+            populateYearDropdown();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Form submissions
+            transactionForm.addEventListener('submit', addTransaction);
+            budgetForm.addEventListener('submit', addBudget);
+            groupForm.addEventListener('submit', addGroup);
+            
+            // Tab navigation
+            tabLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabId = this.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            // Nav navigation
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabId = this.getAttribute('data-tab');
+                    switchTab(tabId);
+                    
+                    // Update active class
+                    navLinks.forEach(navLink => navLink.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Filter transactions
+            document.getElementById('apply-filters').addEventListener('click', renderTransactions);
+            
+            // Generate report
+            document.getElementById('generate-report').addEventListener('click', generateReport);
+        }
+
+        function switchTab(tabId) {
+            // Hide all tabs
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Deactivate all tab links
+            tabLinks.forEach(link => link.classList.remove('active'));
+            
+            // Activate the selected tab
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            
+            // Activate the corresponding tab link
+            document.querySelector(`.tab-link[data-tab="${tabId}"]`).classList.add('active');
+            
+            // Update charts if switching to dashboard
+            if (tabId === 'dashboard') {
+                updateCharts();
+            }
+        }
+
+        function addTransaction(e) {
+            e.preventDefault();
+            
+            const type = document.getElementById('type').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const date = document.getElementById('date').value;
+            const notes = document.getElementById('notes').value;
+            
+            const transaction = {
+                id: Date.now(),
+                type,
+                amount,
+                category,
+                date,
+                notes
+            };
+            
+            transactions.push(transaction);
+            saveData();
+            
+            // Reset form
+            transactionForm.reset();
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+            
+            // Update UI
+            updateDashboard();
+            renderTransactions();
+            
+            alert('Transaction added successfully!');
+        }
+
+        function addBudget(e) {
+            e.preventDefault();
+            
+            const category = document.getElementById('budget-category').value;
+            const amount = parseFloat(document.getElementById('budget-amount').value);
+            
+            // Check if budget already exists for this category
+            const existingBudgetIndex = budgets.findIndex(b => b.category === category);
+            
+            if (existingBudgetIndex !== -1) {
+                budgets[existingBudgetIndex].amount = amount;
+            } else {
+                budgets.push({
+                    id: Date.now(),
+                    category,
+                    amount
+                });
+            }
+            
+            saveData();
+            
+            // Reset form
+            budgetForm.reset();
+            
+            // Update UI
+            renderBudgets();
+            updateBudgetProgress();
+            
+            alert('Budget set successfully!');
+        }
+
+        function addGroup(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('group-name').value;
+            const members = document.getElementById('group-members').value.split(',').map(m => m.trim());
+            
+            groups.push({
+                id: Date.now(),
+                name,
+                members,
+                expenses: []
+            });
+            
+            saveData();
+            
+            // Reset form
+            groupForm.reset();
+            
+            // Update UI
+            renderGroups();
+            
+            alert('Group created successfully!');
+        }
+
+        function deleteTransaction(id) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveData();
+                updateDashboard();
+                renderTransactions();
+            }
+        }
+
+        function deleteBudget(id) {
+            if (confirm('Are you sure you want to delete this budget?')) {
+                budgets = budgets.filter(b => b.id !== id);
+                saveData();
+                renderBudgets();
+                updateBudgetProgress();
+            }
+        }
+
+        function deleteGroup(id) {
+            if (confirm('Are you sure you want to delete this group?')) {
+                groups = groups.filter(g => g.id !== id);
+                saveData();
+                renderGroups();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            localStorage.setItem('budgets', JSON.stringify(budgets));
+            localStorage.setItem('groups', JSON.stringify(groups));
+        }
+
+        function updateDashboard() {
+            const totalIncome = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const totalExpenses = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const netBalance = totalIncome - totalExpenses;
+            
+            // Update quick summary
+            document.getElementById('total-income').textContent = formatCurrency(totalIncome);
+            document.getElementById('total-expenses').textContent = formatCurrency(totalExpenses);
+            document.getElementById('net-balance').textContent = formatCurrency(netBalance);
+            
+            // Update dashboard cards
+            document.getElementById('dashboard-income').textContent = formatCurrency(totalIncome);
+            document.getElementById('dashboard-expenses').textContent = formatCurrency(totalExpenses);
+            document.getElementById('dashboard-balance').textContent = formatCurrency(netBalance);
+            
+            // Update charts
+            updateCharts();
+            updateBudgetProgress();
+        }
+
+        function updateCharts() {
+            updateIncomeExpenseChart();
+            updateCategoryChart();
+        }
+
+        function updateIncomeExpenseChart() {
+            const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
+            
+            // Calculate monthly income and expenses
+            const monthlyData = {};
+            transactions.forEach(t => {
+                const date = new Date(t.date);
+                const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+                
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = { income: 0, expenses: 0 };
+                }
+                
+                if (t.type === 'income') {
+                    monthlyData[monthYear].income += t.amount;
+                } else {
+                    monthlyData[monthYear].expenses += t.amount;
+                }
+            });
+            
+            const labels = Object.keys(monthlyData);
+            const incomeData = labels.map(label => monthlyData[label].income);
+            const expensesData = labels.map(label => monthlyData[label].expenses);
+            
+            if (incomeExpenseChart) {
+                incomeExpenseChart.destroy();
+            }
+            
+            incomeExpenseChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: incomeData,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Expenses',
+                            data: expensesData,
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₹' + context.raw;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCategoryChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            // Calculate expenses by category
+            const categoryData = {};
+            transactions
+                .filter(t => t.type === 'expense')
+                .forEach(t => {
+                    if (!categoryData[t.category]) {
+                        categoryData[t.category] = 0;
+                    }
+                    categoryData[t.category] += t.amount;
+                });
+            
+            const labels = Object.keys(categoryData);
+            const data = labels.map(label => categoryData[label]);
+            
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            
+            categoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(199, 199, 199, 0.6)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ₹' + context.raw;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateBudgetProgress() {
+            const budgetProgressContainer = document.getElementById('budget-progress');
+            budgetProgressContainer.innerHTML = '';
+            
+            if (budgets.length === 0) {
+                budgetProgressContainer.innerHTML = '<p>No budgets set. Set budgets to track your spending.</p>';
+                return;
+            }
+            
+            // Calculate spending for each budget category
+            const spendingByCategory = {};
+            transactions
+                .filter(t => t.type === 'expense')
+                .forEach(t => {
+                    if (!spendingByCategory[t.category]) {
+                        spendingByCategory[t.category] = 0;
+                    }
+                    spendingByCategory[t.category] += t.amount;
+                });
+            
+            budgets.forEach(budget => {
+                const spent = spendingByCategory[budget.category] || 0;
+                const percentage = Math.min(100, (spent / budget.amount) * 100);
+                const remaining = budget.amount - spent;
+                
+                const budgetElement = document.createElement('div');
+                budgetElement.className = 'budget-item';
+                budgetElement.innerHTML = `
+                    <h4>${budget.category}</h4>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: ${percentage}%;"></div>
+                    </div>
+                    <p>${formatCurrency(spent)} of ${formatCurrency(budget.amount)} (${percentage.toFixed(0)}%)</p>
+                    <p>Remaining: ${formatCurrency(remaining)}</p>
+                    ${remaining < 0 ? '<span class="badge badge-danger">Over Budget!</span>' : ''}
+                `;
+                
+                budgetProgressContainer.appendChild(budgetElement);
+            });
+        }
+
+        function renderTransactions() {
+            const tbody = transactionsTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            // Get filter values
+            const typeFilter = document.getElementById('filter-type').value;
+            const categoryFilter = document.getElementById('filter-category').value;
+            const startDateFilter = document.getElementById('filter-start-date').value;
+            const endDateFilter = document.getElementById('filter-end-date').value;
+            
+            // Filter transactions
+            let filteredTransactions = transactions;
+            
+            if (typeFilter) {
+                filteredTransactions = filteredTransactions.filter(t => t.type === typeFilter);
+            }
+            
+            if (categoryFilter) {
+                filteredTransactions = filteredTransactions.filter(t => t.category === categoryFilter);
+            }
+            
+            if (startDateFilter) {
+                filteredTransactions = filteredTransactions.filter(t => t.date >= startDateFilter);
+            }
+            
+            if (endDateFilter) {
+                filteredTransactions = filteredTransactions.filter(t => t.date <= endDateFilter);
+            }
+            
+            // Sort by date (newest first)
+            filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (filteredTransactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No transactions found.</td></tr>';
+                return;
+            }
+            
+            // Render transactions
+            filteredTransactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                
+                const date = new Date(transaction.date);
+                const formattedDate = date.toLocaleDateString();
+                
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td><span class="badge ${transaction.type === 'income' ? 'badge-success' : 'badge-danger'}">${transaction.type}</span></td>
+                    <td>${transaction.category}</td>
+                    <td>${formatCurrency(transaction.amount)}</td>
+                    <td>${transaction.notes || '-'}</td>
+                    <td>
+                        <button class="btn-danger" onclick="deleteTransaction(${transaction.id})">Delete</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderBudgets() {
+            const tbody = budgetsTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            if (budgets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No budgets set.</td></tr>';
+                return;
+            }
+            
+            // Calculate spending for each budget category
+            const spendingByCategory = {};
+            transactions
+                .filter(t => t.type === 'expense')
+                .forEach(t => {
+                    if (!spendingByCategory[t.category]) {
+                        spendingByCategory[t.category] = 0;
+                    }
+                    spendingByCategory[t.category] += t.amount;
+                });
+            
+            // Render budgets
+            budgets.forEach(budget => {
+                const spent = spendingByCategory[budget.category] || 0;
+                const remaining = budget.amount - spent;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${budget.category}</td>
+                    <td>${formatCurrency(budget.amount)}</td>
+                    <td>${formatCurrency(spent)}</td>
+                    <td>${formatCurrency(remaining)}</td>
+                    <td>
+                        <button class="btn-danger" onclick="deleteBudget(${budget.id})">Delete</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderGroups() {
+            groupsList.innerHTML = '';
+            
+            if (groups.length === 0) {
+                groupsList.innerHTML = '<p>No groups created yet.</p>';
+                return;
+            }
+            
+            groups.forEach(group => {
+                const groupElement = document.createElement('div');
+                groupElement.className = 'card';
+                groupElement.innerHTML = `
+                    <h4>${group.name}</h4>
+                    <p><strong>Members:</strong> ${group.members.join(', ')}</p>
+                    <p><strong>Expenses:</strong> ${group.expenses.length}</p>
+                    <button class="btn-danger" onclick="deleteGroup(${group.id})">Delete Group</button>
+                `;
+                
+                groupsList.appendChild(groupElement);
+            });
+        }
+
+        function populateYearDropdown() {
+            const yearSelect = document.getElementById('report-year');
+            const currentYear = new Date().getFullYear();
+            
+            for (let year = currentYear - 5; year <= currentYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === currentYear) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+        }
+
+        function generateReport() {
+            const reportType = document.getElementById('report-type').value;
+            const month = parseInt(document.getElementById('report-month').value);
+            const year = parseInt(document.getElementById('report-year').value);
+            
+            const ctx = document.getElementById('report-chart').getContext('2d');
+            const reportSummary = document.getElementById('report-summary');
+            
+            if (reportChart) {
+                reportChart.destroy();
+            }
+            
+            let filteredTransactions = transactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getFullYear() === year && (reportType !== 'monthly' || date.getMonth() + 1 === month);
+            });
+            
+            if (reportType === 'monthly') {
+                // Monthly summary report
+                const income = filteredTransactions
+                    .filter(t => t.type === 'income')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                    
+                const expenses = filteredTransactions
+                    .filter(t => t.type === 'expense')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const net = income - expenses;
+                
+                reportChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Income', 'Expenses'],
+                        datasets: [{
+                            data: [income, expenses],
+                            backgroundColor: [
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(255, 99, 132, 0.6)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ₹' + context.raw;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                reportSummary.innerHTML = `
+                    <h4>Monthly Summary for ${month}/${year}</h4>
+                    <p>Total Income: ${formatCurrency(income)}</p>
+                    <p>Total Expenses: ${formatCurrency(expenses)}</p>
+                    <p>Net: ${formatCurrency(net)}</p>
+                    <p>Savings Rate: ${income > 0 ? ((net / income) * 100).toFixed(2) : '0.00'}%</p>
+                `;
+                
+            } else if (reportType === 'category') {
+                // Category breakdown report
+                const categoryData = {};
+                filteredTransactions
+                    .filter(t => t.type === 'expense')
+                    .forEach(t => {
+                        if (!categoryData[t.category]) {
+                            categoryData[t.category] = 0;
+                        }
+                        categoryData[t.category] += t.amount;
+                    });
+                
+                const labels = Object.keys(categoryData);
+                const data = labels.map(label => categoryData[label]);
+                
+                reportChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.6)',
+                                'rgba(54, 162, 235, 0.6)',
+                                'rgba(255, 206, 86, 0.6)',
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(153, 102, 255, 0.6)',
+                                'rgba(255, 159, 64, 0.6)',
+                                'rgba(199, 199, 199, 0.6)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ₹' + context.raw;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                let summaryHTML = `<h4>Category Breakdown for ${year}</h4>`;
+                labels.forEach((label, index) => {
+                    summaryHTML += `<p>${label}: ${formatCurrency(data[index])}</p>`;
+                });
+                
+                reportSummary.innerHTML = summaryHTML;
+                
+            } else if (reportType === 'trend') {
+                // Spending trends report
+                const monthlyData = {};
+                filteredTransactions
+                    .filter(t => t.type === 'expense')
+                    .forEach(t => {
+                        const date = new Date(t.date);
+                        const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+                        
+                        if (!monthlyData[monthYear]) {
+                            monthlyData[monthYear] = 0;
+                        }
+                        monthlyData[monthYear] += t.amount;
+                    });
+                
+                const labels = Object.keys(monthlyData);
+                const data = labels.map(label => monthlyData[label]);
+                
+                reportChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Monthly Expenses',
+                            data: data,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₹' + value;
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Expenses: ₹' + context.raw;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                let summaryHTML = `<h4>Spending Trends for ${year}</h4>`;
+                labels.forEach((label, index) => {
+                    summaryHTML += `<p>${label}: ${formatCurrency(data[index])}</p>`;
+                });
+                
+                reportSummary.innerHTML = summaryHTML;
+            }
+        }
+    </script>
+</body>
+</html>
